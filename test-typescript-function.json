@@ -1,0 +1,127 @@
+[
+    {
+        "id": "test-typescript-zod-flow",
+        "label": "TypeScript Zod Test Flow",
+        "nodes": [
+            {
+                "id": "inject-node",
+                "type": "inject",
+                "z": "test-typescript-zod-flow",
+                "name": "Test Data",
+                "props": {
+                    "payload": {
+                        "name": "John Doe",
+                        "email": "john@example.com",
+                        "age": 30
+                    }
+                },
+                "repeat": "",
+                "crontab": "",
+                "once": false,
+                "onceDelay": 0.1,
+                "topic": "",
+                "x": 130,
+                "y": 100,
+                "wires": [["typescript-function"]]
+            },
+            {
+                "id": "typescript-function",
+                "type": "function",
+                "z": "test-typescript-zod-flow",
+                "name": "TypeScript Zod Validation",
+                "func": "import { userSchema } from \"schemas\";\n\n// Validate incoming payload with full TypeScript support\nconst validation = userSchema.safeParse(msg.payload);\n\nif (validation.success) {\n    // TypeScript knows this is a User object\n    const user = validation.data;\n    \n    // Full IntelliSense support\n    msg.payload = {\n        name: user.name,\n        email: user.email,\n        age: user.age,\n        isValid: true,\n        processedAt: new Date().toISOString()\n    };\n    \n    return msg;\n} else {\n    // Handle validation errors\n    msg.error = validation.error.format();\n    msg.statusCode = 400;\n    \n    return null;\n}",
+                "outputs": 1,
+                "noerr": 0,
+                "initialize": "",
+                "finalize": "",
+                "libs": [
+                    {
+                        "var": "zod",
+                        "module": "zod"
+                    }
+                ],
+                "x": 350,
+                "y": 100,
+                "wires": [["debug-node"]],
+                "typescriptMode": true
+            },
+            {
+                "id": "debug-node",
+                "type": "debug",
+                "z": "test-typescript-zod-flow",
+                "name": "Debug Output",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "payload",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 570,
+                "y": 100,
+                "wires": []
+            },
+            {
+                "id": "inject-invalid",
+                "type": "inject",
+                "z": "test-typescript-zod-flow",
+                "name": "Invalid Data",
+                "props": {
+                    "payload": {
+                        "name": "Jane Doe",
+                        "email": "invalid-email",
+                        "age": "not-a-number"
+                    }
+                },
+                "repeat": "",
+                "crontab": "",
+                "once": false,
+                "onceDelay": 0.1,
+                "topic": "",
+                "x": 130,
+                "y": 200,
+                "wires": [["typescript-function-2"]]
+            },
+            {
+                "id": "typescript-function-2",
+                "type": "function",
+                "z": "test-typescript-zod-flow",
+                "name": "TypeScript Error Handling",
+                "func": "import { userSchema } from \"schemas\";\nimport { z } from \"zod\";\n\n// Create a more detailed schema with custom validation\nconst detailedUserSchema = userSchema.extend({\n    email: z.string().email(\"Invalid email format\"),\n    age: z.number().min(0, \"Age must be positive\").max(120, \"Age must be reasonable\")\n});\n\nconst validation = detailedUserSchema.safeParse(msg.payload);\n\nif (validation.success) {\n    msg.payload = {\n        ...validation.data,\n        isValid: true\n    };\n    return msg;\n} else {\n    // Enhanced error handling\n    const errors = validation.error.format();\n    msg.payload = {\n        isValid: false,\n        errors: errors,\n        originalData: msg.payload\n    };\n    \n    return msg;\n}",
+                "outputs": 1,
+                "noerr": 0,
+                "initialize": "",
+                "finalize": "",
+                "libs": [
+                    {
+                        "var": "zod",
+                        "module": "zod"
+                    }
+                ],
+                "x": 350,
+                "y": 200,
+                "wires": [["debug-error"]],
+                "typescriptMode": true
+            },
+            {
+                "id": "debug-error",
+                "type": "debug",
+                "z": "test-typescript-zod-flow",
+                "name": "Debug Errors",
+                "active": true,
+                "tosidebar": true,
+                "console": false,
+                "tostatus": false,
+                "complete": "payload",
+                "targetType": "msg",
+                "statusVal": "",
+                "statusType": "auto",
+                "x": 570,
+                "y": 200,
+                "wires": []
+            }
+        ],
+        "info": "This flow demonstrates TypeScript function nodes with Zod schema validation. The first function validates correct data, the second shows error handling for invalid data."
+    }
+] 
